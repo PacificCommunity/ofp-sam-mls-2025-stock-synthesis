@@ -1,8 +1,7 @@
 # Extract population results, write CSV output tables
 
 # Before: model.rds (model)
-# After:  batage.csv, fatage.csv, natage.csv, summary.csv,
-#         timeseries_area.csv, (output)
+# After:  batage.csv, fatage.csv, natage.csv, summary.csv (output)
 
 library(TAF)
 mkdir("output")
@@ -15,14 +14,13 @@ derived <- model$derived_quants
 dynamic <- model$Dynamic_Bzero[model$Dynamic_Bzero$Era == "TIME",]
 m.area <- model$M_by_area[model$M_by_area$Era == "TIME",]
 natage <- model$natage[model$natage$Era == "TIME",]
-timeseries <- model$timeseries[model$timeseries$Era == "TIME",]
 z.area <- model$Z_by_area[model$Z_by_area$Era == "TIME",]
 
 # B at age
 batage <- batage[batage$Seas == 1,]
 batage <- batage[batage$"Beg/Mid" == "B",]
 batage <- batage[batage$BirthSeas == 1,]
-batage <- batage[c("Area", "Yr", grepv("[0-9]", names(batage)))]
+batage <- batage[c("Yr", grepv("[0-9]", names(batage)))]
 batage <- wide2long(batage, names=c("Age", "B"))
 
 # F at age
@@ -34,8 +32,8 @@ z.area <- z.area[z.area$BirthSeas == 1,]
 z.area <- z.area[!names(z.area) %in% exclude]
 m.area <- wide2long(m.area)
 z.area <- wide2long(z.area)
-m.area <- aggregate(Value~ Area + Yr + Age, m.area, mean)
-z.area <- aggregate(Value~ Area + Yr + Age, z.area, mean)
+m.area <- aggregate(Value~Yr+Age, m.area, mean)
+z.area <- aggregate(Value~Yr+Age, z.area, mean)
 fatage <- z.area
 fatage$Value <- z.area$Value - m.area$Value
 names(fatage)[names(fatage) == "Value"] <- "F"
@@ -44,15 +42,8 @@ names(fatage)[names(fatage) == "Value"] <- "F"
 natage <- natage[natage$Seas == 1,]
 natage <- natage[natage$"Beg/Mid" == "B",]
 natage <- natage[natage$BirthSeas == 1,]
-natage <- natage[c("Area", "Yr", grepv("[0-9]", names(natage)))]
+natage <- natage[c("Yr", grepv("[0-9]", names(natage)))]
 natage <- wide2long(natage, names=c("Age", "N"))
-
-# Time series by area
-timeseries.area <- timeseries[timeseries$Seas == 1,]
-names(timeseries.area)[names(timeseries.area) == "Recruit_0"] <- "Rec"
-names(timeseries.area)[names(timeseries.area) == "Bio_all"] <- "TB"
-names(timeseries.area)[names(timeseries.area) == "SpawnBio"] <- "SB"
-timeseries.area <- timeseries.area[c("Area", "Yr", "Rec", "TB", "SB")]
 
 # Summary
 Year <- annual$year
@@ -71,6 +62,4 @@ summary <- data.frame(Year, Rec, Catch, TB, SB, F=Fmort, SB_SBmsy, SB_SBF0,
 write.taf(batage, dir="output")
 write.taf(fatage, dir="output")
 write.taf(natage, dir="output")
-write.taf(timeseries.area, dir="output")
 write.taf(summary, dir="output")
-
